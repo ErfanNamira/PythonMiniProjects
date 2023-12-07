@@ -1,0 +1,46 @@
+import os
+import shutil
+
+def get_folder_sizes(path):
+    folder_sizes = {}
+    total_size = 0
+
+    for root, dirs, files in os.walk(path):
+        folder_size = sum(os.path.getsize(os.path.join(root, file)) for file in files)
+        folder_sizes[root] = folder_size
+        total_size += folder_size
+
+    return folder_sizes, total_size
+
+def get_total_drive_size(drive):
+    total, used, free = shutil.disk_usage(drive)
+    return total
+
+def display_folder_sizes_sorted(folder_sizes, total_size, drive_size):
+    sorted_folders = sorted(folder_sizes.items(), key=lambda x: x[1], reverse=True)
+
+    print(f"{'Folder':<50} {'Size (GB)':<15} {'Percentage of Drive':<20}")
+    print("-" * 90)
+
+    for folder, size in sorted_folders:
+        folder_size_gb = size / (1024 * 1024 * 1024)  # Convert bytes to GB
+        folder_percentage = (size / drive_size) * 100
+        print(f"{folder:<50} {folder_size_gb:.2f} GB {'':<5} {folder_percentage:.2f}%")
+
+def main():
+    # Prompt the user to input the drive or folder path
+    path = input("Enter the drive or folder path: ")
+
+    # Validate if the entered path exists
+    if not os.path.exists(path):
+        print("Path does not exist.")
+        return
+
+    drive = os.path.splitdrive(path)[0]  # Extracting the drive letter
+    total_size = get_total_drive_size(drive)
+
+    folder_sizes, total_folder_size = get_folder_sizes(path)
+    display_folder_sizes_sorted(folder_sizes, total_folder_size, total_size)
+
+if __name__ == "__main__":
+    main()

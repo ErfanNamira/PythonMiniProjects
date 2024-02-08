@@ -13,4 +13,7 @@ This script asks the user for the folder path, gets a list of all files in the f
 a Python program that prompts you to enter a password and then hashes it using passlib.
 pip3 install passlib
 ```
-
+### 🎥 Video Database Creator
+```
+This Python script provides a simple command-line interface for managing a video database stored in a SQLite database file. It allows users to list video files in a specified directory and save the information into a SQLite database. Users can choose whether to include subfolders when listing video files and whether to save the database with a new unique name or overwrite an existing one.
+```

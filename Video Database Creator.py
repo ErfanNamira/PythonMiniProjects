@@ -11,43 +11,15 @@ def create_connection(db_file):
         print(e)
     return conn
 
-def create_video_table(conn):
-    """Create a video table in the database."""
+def export_database(conn, output_file):
+    """Export the database to a .txt file."""
     try:
         cursor = conn.cursor()
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS video (
-                id INTEGER PRIMARY KEY,
-                file_name TEXT,
-                directory TEXT,
-                file_size_mb INTEGER
-            )
-        """)
-        conn.commit()
-    except sqlite3.Error as e:
-        print(e)
-
-def insert_video(conn, file_name, directory):
-    """Insert a single video file into the database."""
-    try:
-        cursor = conn.cursor()
-        file_path = os.path.join(directory, file_name)
-        file_size_mb = round(os.path.getsize(file_path) / (1024 ** 2))
-        cursor.execute("INSERT INTO video (file_name, directory, file_size_mb) VALUES (?, ?, ?)", (file_name, directory, file_size_mb))
-        conn.commit()
-    except sqlite3.Error as e:
-        print(e)
-
-def update_database(conn, database_file, directory):
-    """Update the database with new movie files."""
-    try:
-        cursor = conn.cursor()
-        files_in_database = set(file[0] for file in cursor.execute("SELECT file_name FROM video").fetchall())
-        for root, _, files in os.walk(directory):
-            for file in files:
-                if file not in files_in_database and file.endswith((".mkv", ".mp4")):
-                    insert_video(conn, file, root)
-        print("Database updated successfully!")
+        cursor.execute("SELECT * FROM video")
+        with open(output_file, 'w') as f:
+            for row in cursor.fetchall():
+                f.write(f"{row[0]} | {row[1]} | {row[3]} | {row[2]}\n")
+        print(f"Database exported to {output_file} successfully!")
     except sqlite3.Error as e:
         print(e)
 
@@ -58,7 +30,8 @@ def main():
         print("1. List video files in a database")
         print("2. Add a single movie to the database")
         print("3. Update a database with new movie files")
-        print("4. Exit")
+        print("4. Export database to a .txt file")
+        print("5. Exit")
 
         choice = input("Enter your choice: ")
 
@@ -117,6 +90,18 @@ def main():
                 print("Error: Unable to create or connect to the database.")
 
         elif choice == "4":
+            database_file = input("Enter the database address that should be exported: ")
+            output_file = input("Enter the name of the output .txt file: ")
+            db_file_path = os.path.join(os.getcwd(), database_file)
+            conn = create_connection(db_file_path)
+            if conn is not None:
+                export_database(conn, output_file)
+                conn.close()
+                input("Press Enter to return to the main menu...")
+            else:
+                print("Error: Unable to create or connect to the database.")
+
+        elif choice == "5":
             print("Exiting the program...")
             break
 

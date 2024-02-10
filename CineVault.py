@@ -53,8 +53,14 @@ def insert_videos(conn, videos):
     """Insert video files into the database."""
     try:
         cursor = conn.cursor()
-        cursor.executemany("INSERT INTO video (file_name, directory, file_size_mb) VALUES (?, ?, ?)", videos)
+        for video in videos:
+            file_name, directory, file_size_mb = video
+            cursor.execute("SELECT COUNT(*) FROM video WHERE file_name = ? AND directory = ?", (file_name, directory))
+            count = cursor.fetchone()[0]
+            if count == 0:
+                cursor.execute("INSERT INTO video (file_name, directory, file_size_mb) VALUES (?, ?, ?)", (file_name, directory, file_size_mb))
         conn.commit()
+        print("Movies added to the database successfully!")
     except sqlite3.Error as e:
         print(e)
 
@@ -130,8 +136,10 @@ def main():
             conn = create_connection(db_file_path)
             if conn is not None:
                 create_video_table(conn)
-                update_database(conn, db_file_path, directory)
+                videos = list_video_files(directory, include_subfolders=True)
+                insert_videos(conn, videos)
                 conn.close()
+                print("Database updated successfully!")
                 input("Press Enter to return to the main menu...")
             else:
                 print("Error: Unable to create or connect to the database.")

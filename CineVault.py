@@ -11,6 +11,17 @@ def create_connection(db_file):
         print(e)
     return conn
 
+def list_video_files(directory, include_subfolders=False):
+    """List video files in the given directory."""
+    video_files = []
+    for root, dirs, files in os.walk(directory):
+        if include_subfolders or root == directory:
+            for file in files:
+                if file.endswith((".mkv", ".mp4")):
+                    file_path = os.path.join(root, file)
+                    video_files.append((file, file_path, round(os.path.getsize(file_path) / (1024 ** 2))))
+    return video_files
+
 def create_video_table(conn):
     """Create a video table in the database."""
     try:
@@ -27,16 +38,16 @@ def create_video_table(conn):
     except sqlite3.Error as e:
         print(e)
 
-def list_video_files(directory, include_subfolders=False):
-    """List video files in the given directory."""
-    video_files = []
-    for root, dirs, files in os.walk(directory):
-        if include_subfolders or root == directory:  
-            for file in files:
-                if file.endswith((".mkv", ".mp4")):
-                    file_path = os.path.join(root, file)
-                    video_files.append((file, file_path, round(os.path.getsize(file_path) / (1024 ** 2))))
-    return video_files
+def insert_video(conn, file_name, directory):
+    """Insert a single video file into the database."""
+    try:
+        cursor = conn.cursor()
+        file_path = os.path.join(directory, file_name)
+        file_size_mb = round(os.path.getsize(file_path) / (1024 ** 2))
+        cursor.execute("INSERT INTO video (file_name, directory, file_size_mb) VALUES (?, ?, ?)", (file_name, directory, file_size_mb))
+        conn.commit()
+    except sqlite3.Error as e:
+        print(e)
 
 def insert_videos(conn, videos):
     """Insert video files into the database."""
@@ -44,16 +55,6 @@ def insert_videos(conn, videos):
         cursor = conn.cursor()
         cursor.executemany("INSERT INTO video (file_name, directory, file_size_mb) VALUES (?, ?, ?)", videos)
         conn.commit()
-    except sqlite3.Error as e:
-        print(e)
-
-def update_database(conn, db_file_path, directory):
-    """Update the database with new movie files."""
-    try:
-        create_video_table(conn)
-        videos = list_video_files(directory)
-        insert_videos(conn, videos)
-        print("Database updated successfully!")
     except sqlite3.Error as e:
         print(e)
 
@@ -128,6 +129,7 @@ def main():
             db_file_path = os.path.join(os.getcwd(), database_file)
             conn = create_connection(db_file_path)
             if conn is not None:
+                create_video_table(conn)
                 update_database(conn, db_file_path, directory)
                 conn.close()
                 input("Press Enter to return to the main menu...")

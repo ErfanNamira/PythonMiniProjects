@@ -11,6 +11,52 @@ def create_connection(db_file):
         print(e)
     return conn
 
+def create_video_table(conn):
+    """Create a video table in the database."""
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS video (
+                id INTEGER PRIMARY KEY,
+                file_name TEXT,
+                directory TEXT,
+                file_size_mb INTEGER
+            )
+        """)
+        conn.commit()
+    except sqlite3.Error as e:
+        print(e)
+
+def list_video_files(directory, include_subfolders=False):
+    """List video files in the given directory."""
+    video_files = []
+    for root, dirs, files in os.walk(directory):
+        if include_subfolders or root == directory:  
+            for file in files:
+                if file.endswith((".mkv", ".mp4")):
+                    file_path = os.path.join(root, file)
+                    video_files.append((file, file_path, round(os.path.getsize(file_path) / (1024 ** 2))))
+    return video_files
+
+def insert_videos(conn, videos):
+    """Insert video files into the database."""
+    try:
+        cursor = conn.cursor()
+        cursor.executemany("INSERT INTO video (file_name, directory, file_size_mb) VALUES (?, ?, ?)", videos)
+        conn.commit()
+    except sqlite3.Error as e:
+        print(e)
+
+def update_database(conn, db_file_path, directory):
+    """Update the database with new movie files."""
+    try:
+        create_video_table(conn)
+        videos = list_video_files(directory)
+        insert_videos(conn, videos)
+        print("Database updated successfully!")
+    except sqlite3.Error as e:
+        print(e)
+
 def export_database(conn, output_file):
     """Export the database to a .txt file."""
     try:
@@ -82,7 +128,6 @@ def main():
             db_file_path = os.path.join(os.getcwd(), database_file)
             conn = create_connection(db_file_path)
             if conn is not None:
-                create_video_table(conn)
                 update_database(conn, db_file_path, directory)
                 conn.close()
                 input("Press Enter to return to the main menu...")

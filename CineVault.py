@@ -77,13 +77,13 @@ def export_database(conn, output_file):
         print(e)
 
 def main():
-    print("Welcome to the Video Database Management System!")
+    print("Welcome to CineVault Video Database Management!")
     while True:
         print("\nMain Menu:")
-        print("1. List video files in a database")
+        print("1. Scan directory for video files and create database")
         print("2. Add a single movie to the database")
-        print("3. Update a database with new movie files")
-        print("4. Export database to a .txt file")
+        print("3. Update database with new movie files")
+        print("4. Export database to a text file")
         print("5. Exit")
 
         choice = input("Enter your choice: ")

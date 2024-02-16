@@ -2,14 +2,13 @@ import os
 import sqlite3
 
 def create_connection(db_file):
-    """Create a database connection to the SQLite database."""
-    conn = None
+    """Create a connection to the SQLite database."""
     try:
         conn = sqlite3.connect(db_file)
         return conn
     except sqlite3.Error as e:
         print(e)
-    return conn
+        return None
 
 def list_video_files(directory, include_subfolders=False):
     """List video files in the given directory."""
@@ -76,6 +75,21 @@ def export_database(conn, output_file):
     except sqlite3.Error as e:
         print(e)
 
+def check_similar_records(conn):
+    """Check for similar records based on movie name."""
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT file_name, COUNT(*) FROM video GROUP BY file_name HAVING COUNT(*) > 1")
+        similar_records = cursor.fetchall()
+        if similar_records:
+            print("Similar records found:")
+            for record in similar_records:
+                print(record[0])  # Print movie name
+        else:
+            print("No similar records found.")
+    except sqlite3.Error as e:
+        print(e)
+
 def main():
     print("Welcome to CineVault Video Database Management!")
     while True:
@@ -84,7 +98,8 @@ def main():
         print("2. Add a single movie to the database")
         print("3. Update database with new movie files")
         print("4. Export database to a text file")
-        print("5. Exit")
+        print("5. Check for similar records based on movie name")
+        print("6. Exit")
 
         choice = input("Enter your choice: ")
 
@@ -92,11 +107,7 @@ def main():
             directory = input("Enter the directory containing video files: ")
             include_subfolders = input("Include subfolders? (yes/no): ").lower() == "yes"
             save_as_new = input("Do you want to save the database with a new unique name? (yes/no): ").lower()
-            if save_as_new == "yes":
-                folder_name = os.path.basename(os.path.normpath(directory))
-                db_file = f"video_database_{folder_name}.db"
-            else:
-                db_file = "video_database.db"
+            db_file = f"video_database_{os.path.basename(os.path.normpath(directory))}.db" if save_as_new == "yes" else "video_database.db"
             db_file_path = os.path.join(os.getcwd(), db_file)
             conn = create_connection(db_file_path)
             if conn is not None:
@@ -113,11 +124,7 @@ def main():
             directory = input("Enter the directory containing the movie file: ")
             file_name = input("Enter the name of the movie file: ")
             save_as_new = input("Do you want to save the database with a new unique name? (yes/no): ").lower()
-            if save_as_new == "yes":
-                folder_name = os.path.basename(os.path.normpath(directory))
-                db_file = f"video_database_{folder_name}.db"
-            else:
-                db_file = "video_database.db"
+            db_file = f"video_database_{os.path.basename(os.path.normpath(directory))}.db" if save_as_new == "yes" else "video_database.db"
             db_file_path = os.path.join(os.getcwd(), db_file)
             conn = create_connection(db_file_path)
             if conn is not None:
@@ -157,6 +164,17 @@ def main():
                 print("Error: Unable to create or connect to the database.")
 
         elif choice == "5":
+            db_file = input("Enter the path of the database file: ")
+            db_file_path = os.path.join(os.getcwd(), db_file)
+            conn = create_connection(db_file_path)
+            if conn is not None:
+                check_similar_records(conn)
+                conn.close()
+                input("Press Enter to return to the main menu...")
+            else:
+                print("Error: Unable to create or connect to the database.")
+
+        elif choice == "6":
             print("Exiting the program...")
             break
 

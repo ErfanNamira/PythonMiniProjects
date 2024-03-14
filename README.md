@@ -11,7 +11,7 @@ pip3 install passlib
 ```
 ### 🎥 Video Database Creator
 This Python script provides a simple command-line interface for managing a video database stored in a SQLite database file. It allows users to list video files in a specified directory and save the information into a SQLite database. Users can choose whether to include subfolders when listing video files and whether to save the database with a new unique name or overwrite an existing one.
-### Video Frame Extractor
+### 🧩 Video Frame Extractor
 This script extracts a frame from a video file (.mkv) specified by the user at a given frame number and saves it as a PNG image in the same directory as the script. The script utilizes the OpenCV library to load the video file, read the specified frame, and save it as an image file. It prompts the user to input the video file path and the frame number to extract. After extracting and saving the frame, the script asks the user if they want to extract another frame from the same video.
 ```
 pip install opencv-python
